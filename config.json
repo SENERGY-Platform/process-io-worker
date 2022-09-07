@@ -1,0 +1,26 @@
+{
+    "shards_db": "postgres://usr:pw@databasip:5432/shards?sslmode=disable",
+    "camunda_worker_id": "process_io",
+    "camunda_worker_topic": "process_io",
+    "camunda_lock_duration_in_ms": 60000,
+    "camunda_worker_wait_duration_in_ms": 1000,
+    "camunda_fetch_max_tasks": 100,
+
+    "auth_endpoint": "",
+    "auth_client_id": "",
+    "auth_client_secret": "",
+    "token_cache_default_expiration_in_seconds": 60,
+
+    "kafka_url": "kafka:9092",
+    "consumer_group": "process_io",
+    "kafka_incident_topic": "camunda_incident",
+
+    "io_api_url": "",
+
+    "debug": false,
+
+    "read_prefix": "io.output.",
+    "write_prefix": "io.input.",
+    "instance_id_placeholder": "{{InstanceId}}",
+    "process_definition_id_placeholder": "{{DefinitionId}}"
+}
