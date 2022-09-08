@@ -22,6 +22,7 @@ import (
 	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type AuthMock struct{}
@@ -35,19 +36,25 @@ func (this AuthMock) ExchangeUserToken(userid string) (token auth.Token, err err
 }
 
 type IoApiMock struct {
-	Values map[string]model.BulkSetElement
+	Values map[string]model.VariableWithUnixTimestamp
 }
 
-func (this *IoApiMock) Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs map[string]interface{}, err error) {
+var timestamp = time.Now().Unix()
+
+func (this *IoApiMock) Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs model.BulkResponse, err error) {
 	if this.Values == nil {
-		this.Values = map[string]model.BulkSetElement{}
+		this.Values = map[string]model.VariableWithUnixTimestamp{}
 	}
 	for _, value := range set {
-		this.Values[value.Key] = value
+		this.Values[value.Key] = model.VariableWithUnixTimestamp{
+			Variable:         value,
+			UnixTimestampInS: timestamp,
+		}
 	}
-	outputs = map[string]interface{}{}
 	for _, key := range get {
-		outputs[key] = this.Values[key].Value
+		variable := this.Values[key]
+		variable.Key = key
+		outputs = append(outputs, variable)
 	}
 	return outputs, nil
 }
@@ -123,7 +130,7 @@ func TestHandler(t *testing.T) {
 		return
 	}
 
-	if !reflect.DeepEqual(api.Values, map[string]model.BulkSetElement{
+	if !reflect.DeepEqual(api.Values, toVariablesWithTimestamp(map[string]model.BulkSetElement{
 		"a": {
 			Key:                 "a",
 			Value:               "a",
@@ -166,8 +173,19 @@ func TestHandler(t *testing.T) {
 			ProcessDefinitionId: "",
 			ProcessInstanceId:   "",
 		},
-	}) {
+	})) {
 		t.Error(api.Values)
 		return
 	}
+}
+
+func toVariablesWithTimestamp(m map[string]model.BulkSetElement) (result map[string]model.VariableWithUnixTimestamp) {
+	result = map[string]model.VariableWithUnixTimestamp{}
+	for key, value := range m {
+		result[key] = model.VariableWithUnixTimestamp{
+			Variable:         value,
+			UnixTimestampInS: timestamp,
+		}
+	}
+	return result
 }

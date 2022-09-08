@@ -16,9 +16,18 @@
 
 package model
 
-type BulkSetElement struct {
+type BulkSetElement = Variable
+
+type BulkResponse = []VariableWithUnixTimestamp
+
+type Variable struct {
 	Key                 string      `json:"key"`
 	Value               interface{} `json:"value"`
 	ProcessDefinitionId string      `json:"process_definition_id,omitempty"`
 	ProcessInstanceId   string      `json:"process_instance_id,omitempty"`
+}
+
+type VariableWithUnixTimestamp struct {
+	Variable
+	UnixTimestampInS int64 `json:"unix_timestamp_in_s"`
 }

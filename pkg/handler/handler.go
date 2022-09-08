@@ -49,7 +49,7 @@ type Auth interface {
 }
 
 type IoApi interface {
-	Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs map[string]interface{}, err error)
+	Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs model.BulkResponse, err error)
 }
 
 func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]interface{}, err error) {
@@ -101,12 +101,12 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 			set = append(set, setElement)
 		}
 	}
-	outputsByKey, err := this.api.Bulk(token, set, get)
+	bulkResult, err := this.api.Bulk(token, set, get)
 	if err != nil {
 		return outputs, err
 	}
-	for key, value := range outputsByKey {
-		outputs[getKeyToOutput[key]] = value
+	for _, variable := range bulkResult {
+		outputs[getKeyToOutput[variable.Key]] = variable.Value
 	}
 	return outputs, err
 }

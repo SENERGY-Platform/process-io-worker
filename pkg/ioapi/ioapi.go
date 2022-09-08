@@ -39,7 +39,7 @@ type IoApi struct {
 	config configuration.Config
 }
 
-func (this *IoApi) Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs map[string]interface{}, err error) {
+func (this *IoApi) Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs model.BulkResponse, err error) {
 	body, err := json.Marshal(map[string]interface{}{
 		"set": set,
 		"get": get,
