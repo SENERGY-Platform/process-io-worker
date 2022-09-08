@@ -19,8 +19,8 @@
 
     "debug": false,
 
-    "read_prefix": "io.output.",
-    "write_prefix": "io.input.",
+    "read_prefix": "io.read.",
+    "write_prefix": "io.write.",
     "instance_id_placeholder": "{{InstanceId}}",
     "process_definition_id_placeholder": "{{DefinitionId}}"
 }

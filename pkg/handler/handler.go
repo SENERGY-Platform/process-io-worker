@@ -27,17 +27,29 @@ import (
 )
 
 func New(config configuration.Config) *Handler {
+	return NewWithDependencies(config, auth.New(config), ioapi.New(config))
+}
+
+func NewWithDependencies(config configuration.Config, auth Auth, ioApi IoApi) *Handler {
 	return &Handler{
 		config: config,
-		api:    ioapi.New(config),
-		auth:   auth.New(config),
+		api:    ioApi,
+		auth:   auth,
 	}
 }
 
 type Handler struct {
 	config configuration.Config
-	api    *ioapi.IoApi
-	auth   *auth.Auth
+	api    IoApi
+	auth   Auth
+}
+
+type Auth interface {
+	ExchangeUserToken(userid string) (token auth.Token, err error)
+}
+
+type IoApi interface {
+	Bulk(token auth.Token, set map[string]interface{}, get []string) (outputs map[string]interface{}, err error)
 }
 
 func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]interface{}, err error) {

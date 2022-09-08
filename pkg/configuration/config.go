@@ -53,12 +53,12 @@ type Config struct {
 	ProcessDefinitionIdPlaceholder string `json:"process_definition_id_placeholder"`
 }
 
-func LoadLibConfig(location string) (config Config, err error) {
-	return Load[Config](location)
+func Load(location string) (config Config, err error) {
+	return LoadConfig[Config](location)
 }
 
 // loads config from json in location and used environment variables (e.g KafkaUrl --> KAFKA_URL)
-func Load[T any](location string) (config T, err error) {
+func LoadConfig[T any](location string) (config T, err error) {
 	file, err := os.Open(location)
 	if err != nil {
 		return config, err

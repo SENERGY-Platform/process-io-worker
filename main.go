@@ -32,7 +32,7 @@ func main() {
 	configLocation := flag.String("config", "config.json", "configuration file")
 	flag.Parse()
 
-	config, err := configuration.LoadLibConfig(*configLocation)
+	config, err := configuration.Load(*configLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
