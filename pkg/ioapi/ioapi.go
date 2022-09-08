@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/auth"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
 	"io"
 	"log"
 	"net/http"
@@ -38,7 +39,7 @@ type IoApi struct {
 	config configuration.Config
 }
 
-func (this *IoApi) Bulk(token auth.Token, set map[string]interface{}, get []string) (outputs map[string]interface{}, err error) {
+func (this *IoApi) Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs map[string]interface{}, err error) {
 	body, err := json.Marshal(map[string]interface{}{
 		"set": set,
 		"get": get,
@@ -93,7 +94,81 @@ func (this *IoApi) Set(token auth.Token, key string, value interface{}) (err err
 	}
 	req, err := http.NewRequest(
 		"PUT",
-		this.config.IoApiUrl+"/resources/"+url.PathEscape(key),
+		this.config.IoApiUrl+"/values/"+url.PathEscape(key),
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		debug.PrintStack()
+		return err
+	}
+	req.Header.Set("Authorization", token.Jwt())
+	req.Header.Set("X-UserId", token.GetUserId())
+	resp, err := client.Do(req)
+	if err != nil {
+		debug.PrintStack()
+		return err
+	}
+	defer resp.Body.Close()
+
+	temp, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 300 {
+		debug.PrintStack()
+		return fmt.Errorf("unexpected response: %v, %v", resp.StatusCode, string(temp))
+	}
+	return err
+}
+
+func (this *IoApi) SetForProcessInstance(token auth.Token, key string, value interface{}, definitionId string, instanceId string) (err error) {
+	body, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	if this.config.Debug {
+		log.Println("DEBUG: store", token.GetUserId(), key, string(body))
+	}
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	req, err := http.NewRequest(
+		"PUT",
+		this.config.IoApiUrl+"/process-definitions/"+url.PathEscape(definitionId)+"/process-instances/"+url.PathEscape(instanceId)+"/values/"+url.PathEscape(key),
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		debug.PrintStack()
+		return err
+	}
+	req.Header.Set("Authorization", token.Jwt())
+	req.Header.Set("X-UserId", token.GetUserId())
+	resp, err := client.Do(req)
+	if err != nil {
+		debug.PrintStack()
+		return err
+	}
+	defer resp.Body.Close()
+
+	temp, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 300 {
+		debug.PrintStack()
+		return fmt.Errorf("unexpected response: %v, %v", resp.StatusCode, string(temp))
+	}
+	return err
+}
+
+func (this *IoApi) SetForProcessDefinition(token auth.Token, key string, value interface{}, definitionId string) (err error) {
+	body, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	if this.config.Debug {
+		log.Println("DEBUG: store", token.GetUserId(), key, string(body))
+	}
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	req, err := http.NewRequest(
+		"PUT",
+		this.config.IoApiUrl+"/process-definitions/"+url.PathEscape(definitionId)+"/values/"+url.PathEscape(key),
 		bytes.NewBuffer(body),
 	)
 	if err != nil {
@@ -126,7 +201,7 @@ func (this *IoApi) Get(token auth.Token, key string) (value interface{}, err err
 	}
 	req, err := http.NewRequest(
 		"GET",
-		this.config.IoApiUrl+"/resources/"+url.PathEscape(key),
+		this.config.IoApiUrl+"/values/"+url.PathEscape(key),
 		nil,
 	)
 	if err != nil {

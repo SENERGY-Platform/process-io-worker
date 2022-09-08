@@ -49,7 +49,7 @@ type Auth interface {
 }
 
 type IoApi interface {
-	Bulk(token auth.Token, set map[string]interface{}, get []string) (outputs map[string]interface{}, err error)
+	Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs map[string]interface{}, err error)
 }
 
 func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]interface{}, err error) {
@@ -63,7 +63,7 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 	get := []string{}
 	getKeyToOutput := map[string]string{}
 
-	set := map[string]interface{}{}
+	set := []model.BulkSetElement{}
 
 	for varName, variable := range task.Variables {
 		if strings.HasPrefix(varName, this.config.ReadPrefix) {
@@ -91,7 +91,14 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 					value = valueAsJson
 				}
 			}
-			set[key] = value
+			setElement := model.BulkSetElement{
+				Key:                 key,
+				Value:               value,
+				ProcessDefinitionId: "",
+				ProcessInstanceId:   "",
+			}
+			setElement.ProcessDefinitionId, setElement.ProcessInstanceId = this.getUsedProcessIds(task, varName)
+			set = append(set, setElement)
 		}
 	}
 	outputsByKey, err := this.api.Bulk(token, set, get)
@@ -108,4 +115,14 @@ func (this *Handler) resolveKeyPlaceholders(task model.CamundaExternalTask, key 
 	result := strings.ReplaceAll(key, this.config.InstanceIdPlaceholder, task.ProcessInstanceId)
 	result = strings.ReplaceAll(result, this.config.ProcessDefinitionIdPlaceholder, task.ProcessDefinitionId)
 	return result
+}
+
+func (this *Handler) getUsedProcessIds(task model.CamundaExternalTask, variableName string) (string, string) {
+	if strings.Contains(variableName, this.config.InstanceIdPlaceholder) {
+		return task.ProcessDefinitionId, task.ProcessInstanceId
+	}
+	if strings.Contains(variableName, this.config.ProcessDefinitionIdPlaceholder) {
+		return task.ProcessDefinitionId, ""
+	}
+	return "", ""
 }

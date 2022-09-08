@@ -35,19 +35,19 @@ func (this AuthMock) ExchangeUserToken(userid string) (token auth.Token, err err
 }
 
 type IoApiMock struct {
-	Values map[string]interface{}
+	Values map[string]model.BulkSetElement
 }
 
-func (this *IoApiMock) Bulk(token auth.Token, set map[string]interface{}, get []string) (outputs map[string]interface{}, err error) {
+func (this *IoApiMock) Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs map[string]interface{}, err error) {
 	if this.Values == nil {
-		this.Values = map[string]interface{}{}
+		this.Values = map[string]model.BulkSetElement{}
 	}
-	for key, value := range set {
-		this.Values[key] = value
+	for _, value := range set {
+		this.Values[value.Key] = value
 	}
 	outputs = map[string]interface{}{}
 	for _, key := range get {
-		outputs[key] = this.Values[key]
+		outputs[key] = this.Values[key].Value
 	}
 	return outputs, nil
 }
@@ -123,14 +123,49 @@ func TestHandler(t *testing.T) {
 		return
 	}
 
-	if !reflect.DeepEqual(api.Values, map[string]interface{}{
-		"a":                        "a",
-		"instance_instance1_b":     "b",
-		"definition_definition1_c": "c",
-		"number":                   42,
-		"jsonStr":                  "json-string",
-		"jsonObj":                  map[string]interface{}{"foo": true},
-		"bool":                     true,
+	if !reflect.DeepEqual(api.Values, map[string]model.BulkSetElement{
+		"a": {
+			Key:                 "a",
+			Value:               "a",
+			ProcessDefinitionId: "",
+			ProcessInstanceId:   "",
+		},
+		"instance_instance1_b": {
+			Key:                 "instance_instance1_b",
+			Value:               "b",
+			ProcessDefinitionId: "definition1",
+			ProcessInstanceId:   "instance1",
+		},
+		"definition_definition1_c": {
+			Key:                 "definition_definition1_c",
+			Value:               "c",
+			ProcessDefinitionId: "definition1",
+			ProcessInstanceId:   "",
+		},
+		"number": {
+			Key:                 "number",
+			Value:               42,
+			ProcessDefinitionId: "",
+			ProcessInstanceId:   "",
+		},
+		"jsonStr": {
+			Key:                 "jsonStr",
+			Value:               "json-string",
+			ProcessDefinitionId: "",
+			ProcessInstanceId:   "",
+		},
+		"jsonObj": {
+			Key:                 "jsonObj",
+			Value:               map[string]interface{}{"foo": true},
+			ProcessDefinitionId: "",
+			ProcessInstanceId:   "",
+		},
+		"bool": {
+			Key:                 "bool",
+			Value:               true,
+			ProcessDefinitionId: "",
+			ProcessInstanceId:   "",
+		},
 	}) {
 		t.Error(api.Values)
 		return
