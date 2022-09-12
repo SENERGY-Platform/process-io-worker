@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -72,7 +72,7 @@ func getOpenidToken(token *OpenidToken, config configuration.Config) (err error)
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		log.Println("ERROR: getOpenidToken()", resp.StatusCode, string(body))
 		err = errors.New("access denied")
 		resp.Body.Close()
@@ -100,7 +100,7 @@ func refreshOpenidToken(token *OpenidToken, config configuration.Config) (err er
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		log.Println("ERROR: refreshOpenidToken()", resp.StatusCode, string(body))
 		err = errors.New("access denied")
 		resp.Body.Close()
