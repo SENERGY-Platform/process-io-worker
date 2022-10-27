@@ -49,6 +49,7 @@ type Config struct {
 
 	ReadPrefix                     string `json:"read_prefix"`
 	WritePrefix                    string `json:"write_prefix"`
+	DefaultPrefix                  string `json:"default_prefix"`
 	InstanceIdPlaceholder          string `json:"instance_id_placeholder"`
 	ProcessDefinitionIdPlaceholder string `json:"process_definition_id_placeholder"`
 }

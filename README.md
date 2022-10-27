@@ -28,3 +28,11 @@ these annotations are needed to later delete instance/deployment dependent value
 example name: `io.write.result`
 
 example value: `instance_{{InstanceId}}_foo`
+
+
+## Default
+it is possible to define a default value for a read:
+
+example name: `io.default.instance_{{InstanceId}}_foo`
+
+example value: `0`

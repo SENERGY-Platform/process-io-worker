@@ -62,19 +62,24 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 
 	get := []string{}
 	getKeyToOutput := map[string]string{}
+	keyToDefault := map[string]interface{}{}
 
 	set := []model.BulkSetElement{}
 
 	for varName, variable := range task.Variables {
 		if strings.HasPrefix(varName, this.config.ReadPrefix) {
 			outputName := strings.TrimPrefix(varName, this.config.ReadPrefix)
-			key, ok := variable.Value.(string)
+			rawKey, ok := variable.Value.(string)
 			if !ok {
 				return outputs, fmt.Errorf("unable to interpret value of %v as string", varName)
 			}
-			key = this.resolveKeyPlaceholders(task, key)
+			key := this.resolveKeyPlaceholders(task, rawKey)
 			get = append(get, key)
 			getKeyToOutput[key] = outputName
+
+			if defaultValueInput, withDefault := task.Variables[this.config.DefaultPrefix+rawKey]; withDefault {
+				keyToDefault[key] = defaultValueInput.Value
+			}
 		}
 		if strings.HasPrefix(varName, this.config.WritePrefix) {
 			key := strings.TrimPrefix(varName, this.config.WritePrefix)
@@ -106,7 +111,11 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 		return outputs, err
 	}
 	for _, variable := range bulkResult {
-		outputs[getKeyToOutput[variable.Key]] = variable.Value
+		if variable.Value == nil {
+			outputs[getKeyToOutput[variable.Key]] = keyToDefault[variable.Key]
+		} else {
+			outputs[getKeyToOutput[variable.Key]] = variable.Value
+		}
 	}
 	return outputs, err
 }

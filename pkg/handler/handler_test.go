@@ -82,6 +82,11 @@ func TestHandler(t *testing.T) {
 			config.WritePrefix + "jsonObj": {Value: `{"foo": true}`},
 			config.WritePrefix + "bool":    {Value: true},
 
+			config.ReadPrefix + "with_default1":                                                  {Value: "instance_" + config.InstanceIdPlaceholder + "_with_default1"},
+			config.DefaultPrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default1": {Value: "defaultstringvalue1"},
+
+			config.WritePrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default2": {Value: "foobar"},
+
 			config.ReadPrefix + "unknown": {Value: "unknown_key"},
 		},
 	})
@@ -91,7 +96,8 @@ func TestHandler(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(outputs, map[string]interface{}{
-		"unknown": nil,
+		"unknown":       nil,
+		"with_default1": "defaultstringvalue1",
 	}) {
 		t.Error(outputs)
 		return
@@ -110,6 +116,12 @@ func TestHandler(t *testing.T) {
 			config.ReadPrefix + "o_jsonStr": {Value: "jsonStr"},
 			config.ReadPrefix + "o_jsonObj": {Value: "jsonObj"},
 			config.ReadPrefix + "o_bool":    {Value: "bool"},
+
+			config.ReadPrefix + "with_default1":                                                  {Value: "instance_" + config.InstanceIdPlaceholder + "_with_default1"},
+			config.DefaultPrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default1": {Value: "defaultstringvalue1"},
+
+			config.ReadPrefix + "with_default2":                                                  {Value: "instance_" + config.InstanceIdPlaceholder + "_with_default2"},
+			config.DefaultPrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default2": {Value: "defaultstringvalue2"},
 		},
 	})
 	if err != nil {
@@ -118,13 +130,15 @@ func TestHandler(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(outputs, map[string]interface{}{
-		"o_a":       "a",
-		"o_b":       "b",
-		"o_c":       "c",
-		"o_number":  42,
-		"o_jsonStr": "json-string",
-		"o_jsonObj": map[string]interface{}{"foo": true},
-		"o_bool":    true,
+		"o_a":           "a",
+		"o_b":           "b",
+		"o_c":           "c",
+		"o_number":      42,
+		"o_jsonStr":     "json-string",
+		"o_jsonObj":     map[string]interface{}{"foo": true},
+		"o_bool":        true,
+		"with_default1": "defaultstringvalue1",
+		"with_default2": "foobar",
 	}) {
 		t.Error(outputs)
 		return
@@ -172,6 +186,12 @@ func TestHandler(t *testing.T) {
 			Value:               true,
 			ProcessDefinitionId: "",
 			ProcessInstanceId:   "",
+		},
+		"instance_instance1_with_default2": {
+			Key:                 "instance_instance1_with_default2",
+			Value:               "foobar",
+			ProcessDefinitionId: "definition1",
+			ProcessInstanceId:   "instance1",
 		},
 	})) {
 		t.Error(api.Values)

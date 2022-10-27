@@ -21,6 +21,7 @@
 
     "read_prefix": "io.read.",
     "write_prefix": "io.write.",
+    "default_prefix": "io.default.",
     "instance_id_placeholder": "{{InstanceId}}",
     "process_definition_id_placeholder": "{{DefinitionId}}"
 }
