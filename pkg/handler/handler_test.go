@@ -17,6 +17,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/auth"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
@@ -85,6 +86,15 @@ func TestHandler(t *testing.T) {
 			config.ReadPrefix + "with_default1":                                                  {Value: "instance_" + config.InstanceIdPlaceholder + "_with_default1"},
 			config.DefaultPrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default1": {Value: "defaultstringvalue1"},
 
+			config.ReadPrefix + "with_default_number":                                                  {Value: "instance_" + config.InstanceIdPlaceholder + "_with_default_number"},
+			config.DefaultPrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default_number": {Value: 42},
+
+			config.ReadPrefix + "with_default_json_number":                                                  {Value: "instance_" + config.InstanceIdPlaceholder + "_with_default_json_number"},
+			config.DefaultPrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default_json_number": {Value: "42"},
+
+			config.ReadPrefix + "with_default_json_str":                                                  {Value: "instance_" + config.InstanceIdPlaceholder + "_with_default_json_str"},
+			config.DefaultPrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default_json_str": {Value: `"defaultstringvalue"`},
+
 			config.WritePrefix + "instance_" + config.InstanceIdPlaceholder + "_with_default2": {Value: "foobar"},
 
 			config.ReadPrefix + "unknown": {Value: "unknown_key"},
@@ -95,11 +105,17 @@ func TestHandler(t *testing.T) {
 		return
 	}
 
-	if !reflect.DeepEqual(outputs, map[string]interface{}{
-		"unknown":       nil,
-		"with_default1": "defaultstringvalue1",
-	}) {
-		t.Error(outputs)
+	expected := map[string]interface{}{
+		"unknown":                  nil,
+		"with_default1":            "defaultstringvalue1",
+		"with_default_number":      42,
+		"with_default_json_number": float64(42),
+		"with_default_json_str":    "defaultstringvalue",
+	}
+	if !reflect.DeepEqual(outputs, expected) {
+		a, _ := json.Marshal(outputs)
+		e, _ := json.Marshal(expected)
+		t.Error("\n", string(e), "\n", string(a))
 		return
 	}
 

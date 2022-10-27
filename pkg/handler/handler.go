@@ -78,24 +78,13 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 			getKeyToOutput[key] = outputName
 
 			if defaultValueInput, withDefault := task.Variables[this.config.DefaultPrefix+rawKey]; withDefault {
-				keyToDefault[key] = defaultValueInput.Value
+				keyToDefault[key] = resolveValue(defaultValueInput.Value)
 			}
 		}
 		if strings.HasPrefix(varName, this.config.WritePrefix) {
 			key := strings.TrimPrefix(varName, this.config.WritePrefix)
 			key = this.resolveKeyPlaceholders(task, key)
-			value := variable.Value
-			valueAsString, ok := variable.Value.(string)
-			if ok {
-				var valueAsJson interface{}
-				err = json.Unmarshal([]byte(valueAsString), &valueAsJson)
-				if err != nil {
-					value = valueAsString
-					err = nil
-				} else {
-					value = valueAsJson
-				}
-			}
+			value := resolveValue(variable.Value)
 			setElement := model.BulkSetElement{
 				Key:                 key,
 				Value:               value,
@@ -118,6 +107,21 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 		}
 	}
 	return outputs, err
+}
+
+func resolveValue(value interface{}) (result interface{}) {
+	result = value
+	valueAsString, ok := result.(string)
+	if ok {
+		var valueAsJson interface{}
+		err := json.Unmarshal([]byte(valueAsString), &valueAsJson)
+		if err != nil {
+			result = valueAsString
+		} else {
+			result = valueAsJson
+		}
+	}
+	return result
 }
 
 func (this *Handler) resolveKeyPlaceholders(task model.CamundaExternalTask, key string) string {
