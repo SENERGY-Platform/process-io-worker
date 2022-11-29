@@ -159,8 +159,14 @@ func (this *Camunda) executeNextTasks() (wait bool) {
 		} else {
 			err = this.completeTask(task.TenantId, task.Id, outputs)
 			if err != nil {
-				this.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
-				continue
+				//retry once
+				go func(task model.CamundaExternalTask) {
+					time.Sleep(1 * time.Second)
+					retryErr := this.completeTask(task.TenantId, task.Id, outputs)
+					if retryErr != nil {
+						this.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, retryErr.Error(), task.TenantId)
+					}
+				}(task)
 			}
 		}
 	}
@@ -198,8 +204,8 @@ func (this *Camunda) completeTask(userId string, taskId string, outputs map[stri
 	}
 
 	if resp.StatusCode >= 300 {
-		log.Println("ERROR: unable to complete task:", resp.StatusCode, string(pl))
-		return fmt.Errorf("unable to complete task: %v, %v", resp.StatusCode, string(pl))
+		log.Println("ERROR: unable to complete task:", completeRequest, resp.StatusCode, string(pl))
+		return fmt.Errorf("unable to complete task %#v: %v, %v", completeRequest, resp.StatusCode, string(pl))
 	} else {
 		log.Println("complete camunda task: ", completeRequest, string(pl))
 	}
