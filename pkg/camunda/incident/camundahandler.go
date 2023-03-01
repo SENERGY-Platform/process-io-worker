@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 InfAI (CC SES)
+ * Copyright (c) 2023 InfAI (CC SES)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package auth
+package incident
 
 import (
-	"github.com/SENERGY-Platform/process-io-worker/pkg/cache"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
-	"time"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
 )
 
-type Auth struct {
-	config configuration.Config
-	cache  cache.Cache
-	openid *OpenidToken
+func NewCamundaIncidentHandler(c Camunda) *CamundaIncidentHandler {
+	return &CamundaIncidentHandler{camunda: c}
 }
 
-func New(config configuration.Config) *Auth {
-	return &Auth{config: config, cache: cache.NewCache(time.Duration(config.TokenCacheDefaultExpirationInSeconds) * time.Second)}
+type CamundaIncidentHandler struct {
+	camunda Camunda
 }
 
-var TimeNow = func() time.Time {
-	return time.Now()
+func (this *CamundaIncidentHandler) Handle(incident model.Incident) error {
+	return this.camunda.StopProcessInstance(incident.TenantId, incident.ProcessInstanceId)
 }

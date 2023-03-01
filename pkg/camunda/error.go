@@ -17,7 +17,6 @@
 package camunda
 
 import (
-	"encoding/json"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
 	"github.com/google/uuid"
 	"log"
@@ -26,26 +25,16 @@ import (
 )
 
 func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
-	b, err := json.Marshal(model.KafkaIncidentsCommand{
-		Command:    "POST",
-		MsgVersion: 3,
-		Incident: &model.Incident{
-			Id:                  uuid.NewString(),
-			ExternalTaskId:      externalTaskId,
-			ProcessInstanceId:   processInstanceId,
-			ProcessDefinitionId: processDefinitionId,
-			WorkerId:            this.GetWorkerId(),
-			ErrorMessage:        msg,
-			Time:                time.Now(),
-			TenantId:            tenantId,
-		},
+	err := this.incident.Handle(model.Incident{
+		Id:                  uuid.NewString(),
+		ExternalTaskId:      externalTaskId,
+		ProcessInstanceId:   processInstanceId,
+		ProcessDefinitionId: processDefinitionId,
+		WorkerId:            this.GetWorkerId(),
+		ErrorMessage:        msg,
+		Time:                time.Now(),
+		TenantId:            tenantId,
 	})
-	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
-		return
-	}
-	err = this.incidentProducer.Produce([]byte(processDefinitionId), b)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()

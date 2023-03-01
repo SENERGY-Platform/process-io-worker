@@ -18,7 +18,6 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/auth"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
 	"reflect"
@@ -26,33 +25,23 @@ import (
 	"time"
 )
 
-type AuthMock struct{}
-
-func (this AuthMock) ExchangeUserToken(userid string) (token auth.Token, err error) {
-	return auth.Token{
-		Token:       userid,
-		Sub:         userid,
-		RealmAccess: nil,
-	}, nil
-}
-
 type IoApiMock struct {
 	Values map[string]model.VariableWithUnixTimestamp
 }
 
 var timestamp = time.Now().Unix()
 
-func (this *IoApiMock) Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs model.BulkResponse, err error) {
+func (this *IoApiMock) Bulk(userid string, req model.BulkRequest) (outputs model.BulkResponse, err error) {
 	if this.Values == nil {
 		this.Values = map[string]model.VariableWithUnixTimestamp{}
 	}
-	for _, value := range set {
+	for _, value := range req.Set {
 		this.Values[value.Key] = model.VariableWithUnixTimestamp{
 			Variable:         value,
 			UnixTimestampInS: timestamp,
 		}
 	}
-	for _, key := range get {
+	for _, key := range req.Get {
 		variable := this.Values[key]
 		variable.Key = key
 		outputs = append(outputs, variable)
@@ -67,7 +56,7 @@ func TestHandler(t *testing.T) {
 		return
 	}
 	api := &IoApiMock{}
-	handler := NewWithDependencies(config, AuthMock{}, api)
+	handler := NewWithDependencies(config, api)
 
 	outputs, err := handler.Do(model.CamundaExternalTask{
 		ProcessInstanceId:   "instance1",
@@ -160,7 +149,7 @@ func TestHandler(t *testing.T) {
 		return
 	}
 
-	if !reflect.DeepEqual(api.Values, toVariablesWithTimestamp(map[string]model.BulkSetElement{
+	if !reflect.DeepEqual(api.Values, toVariablesWithTimestamp(map[string]model.Variable{
 		"a": {
 			Key:                 "a",
 			Value:               "a",
@@ -215,7 +204,7 @@ func TestHandler(t *testing.T) {
 	}
 }
 
-func toVariablesWithTimestamp(m map[string]model.BulkSetElement) (result map[string]model.VariableWithUnixTimestamp) {
+func toVariablesWithTimestamp(m map[string]model.Variable) (result map[string]model.VariableWithUnixTimestamp) {
 	result = map[string]model.VariableWithUnixTimestamp{}
 	for key, value := range m {
 		result[key] = model.VariableWithUnixTimestamp{

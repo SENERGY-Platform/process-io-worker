@@ -17,54 +17,55 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/auth"
+	"github.com/SENERGY-Platform/process-io-api/pkg/api/client/auth"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/ioapi"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/ioclient"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
 	"strings"
+	"sync"
 )
 
-func New(config configuration.Config) *Handler {
-	return NewWithDependencies(config, auth.New(config), ioapi.New(config))
+func New(ctx context.Context, wg *sync.WaitGroup, config configuration.Config) (*Handler, error) {
+	client, err := ioclient.New(ctx, wg, config)
+	if err != nil {
+		return nil, err
+	}
+	return NewWithDependencies(config, client), nil
 }
 
-func NewWithDependencies(config configuration.Config, auth Auth, ioApi IoApi) *Handler {
+func NewWithDependencies(config configuration.Config, ioApi IoClient) *Handler {
 	return &Handler{
 		config: config,
 		api:    ioApi,
-		auth:   auth,
 	}
 }
 
 type Handler struct {
 	config configuration.Config
-	api    IoApi
-	auth   Auth
+	api    IoClient
 }
 
 type Auth interface {
 	ExchangeUserToken(userid string) (token auth.Token, err error)
 }
 
-type IoApi interface {
-	Bulk(token auth.Token, set []model.BulkSetElement, get []string) (outputs model.BulkResponse, err error)
+type IoClient interface {
+	Bulk(userid string, req model.BulkRequest) (outputs model.BulkResponse, err error)
 }
 
 func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]interface{}, err error) {
 	outputs = map[string]interface{}{}
 
-	token, err := this.auth.ExchangeUserToken(task.TenantId)
-	if err != nil {
-		return nil, err
+	req := model.BulkRequest{
+		Get: []string{},
+		Set: []model.Variable{},
 	}
 
-	get := []string{}
 	getKeyToOutput := map[string]string{}
 	keyToDefault := map[string]interface{}{}
-
-	set := []model.BulkSetElement{}
 
 	for varName, variable := range task.Variables {
 		if strings.HasPrefix(varName, this.config.ReadPrefix) {
@@ -74,7 +75,7 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 				return outputs, fmt.Errorf("unable to interpret value of %v as string", varName)
 			}
 			key := this.resolveKeyPlaceholders(task, rawKey)
-			get = append(get, key)
+			req.Get = append(req.Get, key)
 			getKeyToOutput[key] = outputName
 
 			if defaultValueInput, withDefault := task.Variables[this.config.DefaultPrefix+rawKey]; withDefault {
@@ -85,17 +86,17 @@ func (this *Handler) Do(task model.CamundaExternalTask) (outputs map[string]inte
 			key := strings.TrimPrefix(varName, this.config.WritePrefix)
 			key = this.resolveKeyPlaceholders(task, key)
 			value := resolveValue(variable.Value)
-			setElement := model.BulkSetElement{
+			setElement := model.Variable{
 				Key:                 key,
 				Value:               value,
 				ProcessDefinitionId: "",
 				ProcessInstanceId:   "",
 			}
 			setElement.ProcessDefinitionId, setElement.ProcessInstanceId = this.getUsedProcessIds(task, varName)
-			set = append(set, setElement)
+			req.Set = append(req.Set, setElement)
 		}
 	}
-	bulkResult, err := this.api.Bulk(token, set, get)
+	bulkResult, err := this.api.Bulk(task.TenantId, req)
 	if err != nil {
 		return outputs, err
 	}

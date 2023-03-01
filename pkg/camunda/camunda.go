@@ -23,9 +23,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/cache"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/camunda/incident"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/camunda/shards"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/kafka"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
 	"io"
 	"log"
@@ -35,30 +35,52 @@ import (
 	"time"
 )
 
-func New(config configuration.Config, handler Handler, incidentProducer Producer, shards Shards) *Camunda {
+func New(config configuration.Config, handler Handler, incidentHandlerProvider IncidentHandlerProvider, shards Shards) *Camunda {
 	return &Camunda{
-		config:           config,
-		handler:          handler,
-		shards:           shards,
-		incidentProducer: incidentProducer,
+		config:                  config,
+		handler:                 handler,
+		shards:                  shards,
+		incidentHandlerProvider: incidentHandlerProvider,
 	}
 }
 
-func StartDefault(ctx context.Context, wg *sync.WaitGroup, config configuration.Config, handler Handler) error {
-	s, err := shards.New(config.ShardsDb, cache.NewCache(time.Minute))
-	if err != nil {
-		return err
+func StartDefault(ctx context.Context, wg *sync.WaitGroup, config configuration.Config, handler Handler) (err error) {
+	var s Shards
+	if config.CamundaUrl != "" && config.CamundaUrl != "-" {
+		s = shards.StaticShard(config.CamundaUrl)
+	} else {
+		s, err = shards.New(config.ShardsDb, cache.NewCache(time.Minute))
+		if err != nil {
+			return err
+		}
 	}
-	incidentProducer, err := kafka.NewProducer(ctx, config, config.KafkaIncidentTopic)
-	if err != nil {
-		return err
+
+	var incidentHandlerFactory IncidentHandlerProvider = func(ctx context.Context, wg *sync.WaitGroup, c *Camunda) (IncidentHandler, error) {
+		var incidentHandler IncidentHandler
+		switch config.IncidentHandler {
+		case configuration.KafkaIncidentHandler:
+			incidentHandler, err = incident.NewKafkaIncidentHandler(ctx, config)
+			if err != nil {
+				return nil, err
+			}
+		case configuration.MgwIncidentHandler:
+			incidentHandler, err = incident.NewMgwIncidentHandler(ctx, config, c)
+			if err != nil {
+				return nil, err
+			}
+		case configuration.CamundaIncidentHandler:
+			incidentHandler = incident.NewCamundaIncidentHandler(c)
+		default:
+			return nil, errors.New("unknown incident handler: " + config.IncidentHandler)
+		}
+		return incidentHandler, nil
 	}
-	Start(ctx, wg, config, handler, incidentProducer, s)
-	return nil
+
+	return Start(ctx, wg, config, handler, incidentHandlerFactory, s)
 }
 
-func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config, handler Handler, incidentProducer Producer, shards Shards) {
-	New(config, handler, incidentProducer, shards).Start(ctx, wg)
+func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config, handler Handler, incidentHandlerProvider IncidentHandlerProvider, shards Shards) error {
+	return New(config, handler, incidentHandlerProvider, shards).Start(ctx, wg)
 }
 
 type Shards interface {
@@ -66,15 +88,18 @@ type Shards interface {
 	GetShardForUser(userId string) (shardUrl string, err error)
 }
 
+type IncidentHandlerProvider func(ctx context.Context, wg *sync.WaitGroup, c *Camunda) (IncidentHandler, error)
+
 type Camunda struct {
-	config           configuration.Config
-	handler          Handler
-	incidentProducer Producer
-	shards           Shards
+	config                  configuration.Config
+	handler                 Handler
+	incidentHandlerProvider IncidentHandlerProvider
+	incident                IncidentHandler
+	shards                  Shards
 }
 
-type Producer interface {
-	Produce(key []byte, value []byte) error
+type IncidentHandler interface {
+	Handle(incident model.Incident) error
 }
 
 type Handler interface {
@@ -123,7 +148,17 @@ func (this *Camunda) getShardTasks(shard string) (tasks []model.CamundaExternalT
 	return
 }
 
-func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) {
+func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) (err error) {
+	if this.incidentHandlerProvider == nil {
+		return errors.New("missing incident handler provider")
+	}
+	if this.incident != nil {
+		return errors.New("camunda worker is already started")
+	}
+	this.incident, err = this.incidentHandlerProvider(ctx, wg, this)
+	if err != nil {
+		return err
+	}
 	wg.Add(1)
 	go func() {
 		for {
@@ -140,6 +175,7 @@ func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) {
 			}
 		}
 	}()
+	return nil
 }
 
 func (this *Camunda) executeNextTasks() (wait bool) {

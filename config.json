@@ -1,21 +1,48 @@
 {
     "shards_db": "postgres://usr:pw@databasip:5432/shards?sslmode=disable",
+    "camunda_url": "",
+
+    "io_data_source": "api",
+
+    "//------io_data_source == api------------": "",
+    "io_api_url": "",
+    "auth_endpoint": "",
+    "auth_client_id": "",
+    "auth_client_secret": "",
+    "token_cache_default_expiration_in_seconds": 60,
+
+    "//------io_data_source == mongodb------------": "",
+    "mongo_url": "",
+    "mongo_table": "process_io",
+    "mongo_variables_collection": "variables",
+
+    "//------io_data_source == postgres------------": "",
+    "postgres_conn_string": "",
+
+
+
+    "incident_handler": "kafka",
+
+    "//------incident_handler == kafka------------": "",
+    "kafka_url": "kafka:9092",
+    "consumer_group": "process_io",
+    "kafka_incident_topic": "camunda_incident",
+
+    "//------incident_handler == mgw------------": "",
+    "mgw_mqtt_broker": "",
+
+    "//------set to true if in mgw to ensure deletes of unused variables------------": "",
+    "watch_mgw_process_sync": false,
+    "mgw_process_user": "senergy",
+
+
     "camunda_worker_id": "process_io",
     "camunda_worker_topic": "process_io",
     "camunda_lock_duration_in_ms": 60000,
     "camunda_worker_wait_duration_in_ms": 1000,
     "camunda_fetch_max_tasks": 100,
 
-    "auth_endpoint": "",
-    "auth_client_id": "",
-    "auth_client_secret": "",
-    "token_cache_default_expiration_in_seconds": 60,
 
-    "kafka_url": "kafka:9092",
-    "consumer_group": "process_io",
-    "kafka_incident_topic": "camunda_incident",
-
-    "io_api_url": "",
 
     "debug": false,
 

@@ -21,9 +21,22 @@ import (
 	"github.com/SENERGY-Platform/process-io-worker/pkg/camunda"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/handler"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/ioclient"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/mgwsyncwatcher"
 	"sync"
 )
 
 func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config) error {
-	return camunda.StartDefault(ctx, wg, config, handler.New(config))
+	c, err := ioclient.New(ctx, wg, config)
+	if err != nil {
+		return err
+	}
+	if config.WatchMgwProcessSync {
+		err = mgwsyncwatcher.Start(ctx, wg, config, c)
+		if err != nil {
+			return err
+		}
+	}
+	h := handler.NewWithDependencies(config, c)
+	return camunda.StartDefault(ctx, wg, config, h)
 }

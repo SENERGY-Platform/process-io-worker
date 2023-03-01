@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 InfAI (CC SES)
+ * Copyright (c) 2023 InfAI (CC SES)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package model
+package incident
 
-import "github.com/SENERGY-Platform/process-io-api/pkg/model"
-
-type BulkResponse = model.BulkResponse
-type BulkRequest = model.BulkRequest
-type Variable = model.Variable
-type VariableWithUnixTimestamp = model.VariableWithUnixTimestamp
+type Camunda interface {
+	StopProcessInstance(userid string, instanceId string) error
+	GetProcessName(userid string, definitionId string) (name string, err error)
+}

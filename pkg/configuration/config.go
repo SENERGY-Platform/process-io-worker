@@ -27,23 +27,38 @@ import (
 )
 
 type Config struct {
-	ShardsDb                      string `json:"shards_db" config:"secret"`
+	ShardsDb   string `json:"shards_db" config:"secret"`   //
+	CamundaUrl string `json:"camunda_url" config:"secret"` //replaces ShardsDb if set
+
+	IoDataSource IoDataSource `json:"io_data_source"`
+
+	IoApiUrl                             string `json:"io_api_url"`
+	AuthEndpoint                         string `json:"auth_endpoint"`
+	AuthClientId                         string `json:"auth_client_id" config:"secret"`
+	AuthClientSecret                     string `json:"auth_client_secret" config:"secret"`
+	TokenCacheDefaultExpirationInSeconds int    `json:"token_cache_default_expiration_in_seconds"`
+
+	MongoUrl                 string `json:"mongo_url"`
+	MongoTable               string `json:"mongo_table"`
+	MongoVariablesCollection string `json:"mongo_variables_collection"`
+
+	PostgresConnString string `json:"postgres_conn_string"`
+
 	CamundaWorkerId               string `json:"camunda_worker_id"`
 	CamundaWorkerTopic            string `json:"camunda_worker_topic"`
 	CamundaLockDurationInMs       int64  `json:"camunda_lock_duration_in_ms"`
 	CamundaWorkerWaitDurationInMs int64  `json:"camunda_worker_wait_duration_in_ms"`
 	CamundaFetchMaxTasks          int64  `json:"camunda_fetch_max_tasks"`
 
-	AuthEndpoint                         string `json:"auth_endpoint"`
-	AuthClientId                         string `json:"auth_client_id" config:"secret"`
-	AuthClientSecret                     string `json:"auth_client_secret" config:"secret"`
-	TokenCacheDefaultExpirationInSeconds int    `json:"token_cache_default_expiration_in_seconds"`
+	IncidentHandler IncidentHandler `json:"incident_handler"`
 
 	KafkaUrl           string `json:"kafka_url"`
 	ConsumerGroup      string `json:"consumer_group"`
 	KafkaIncidentTopic string `json:"kafka_incident_topic"`
 
-	IoApiUrl string `json:"io_api_url"`
+	MgwMqttBroker       string `json:"mgw_mqtt_broker"`
+	WatchMgwProcessSync bool   `json:"watch_mgw_process_sync"`
+	MgwProcessUser      string `json:"mgw_process_user"`
 
 	Debug bool `json:"debug"`
 
@@ -53,6 +68,18 @@ type Config struct {
 	InstanceIdPlaceholder          string `json:"instance_id_placeholder"`
 	ProcessDefinitionIdPlaceholder string `json:"process_definition_id_placeholder"`
 }
+
+type IoDataSource = string
+
+const MongoDb IoDataSource = "mongodb"
+const ApiClient IoDataSource = "api"
+const PostgresDb IoDataSource = "postgres"
+
+type IncidentHandler = string
+
+const KafkaIncidentHandler IncidentHandler = "kafka"
+const CamundaIncidentHandler IncidentHandler = "camunda"
+const MgwIncidentHandler IncidentHandler = "mgw"
 
 func Load(location string) (config Config, err error) {
 	return LoadConfig[Config](location)
