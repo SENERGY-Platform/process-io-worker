@@ -161,12 +161,12 @@ func testWorker(source string) func(t *testing.T) {
 
 		time.Sleep(2 * time.Second)
 
-		if len(camundamock.UnexpectedRequests) > 0 {
-			t.Error(camundamock.UnexpectedRequests)
+		if len(camundamock.GetUnexpectedRequests()) > 0 {
+			t.Error(camundamock.GetUnexpectedRequests())
 			return
 		}
-		if len(camundamock.StopRequests) > 0 {
-			t.Error(camundamock.StopRequests)
+		if len(camundamock.GetStopRequests()) > 0 {
+			t.Error(camundamock.GetStopRequests())
 			return
 		}
 		expectedCamundaCompletes := map[string][]interface{}{
@@ -200,9 +200,9 @@ func testWorker(source string) func(t *testing.T) {
 				},
 			},
 		}
-
-		if !reflect.DeepEqual(camundamock.CompleteRequests, expectedCamundaCompletes) {
-			t.Errorf("\n%#v\n%#v", expectedCamundaCompletes, camundamock.CompleteRequests)
+		actual := camundamock.GetCompleteRequests()
+		if !reflect.DeepEqual(actual, expectedCamundaCompletes) {
+			t.Errorf("\n%#v\n%#v", expectedCamundaCompletes, actual)
 		}
 
 		variables, err := apictrl.List("user1", model2.VariablesQueryOptions{})

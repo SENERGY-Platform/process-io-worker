@@ -48,6 +48,34 @@ func NewCamundaMock(ctx context.Context, fetchResponses []interface{}) (mock *Ca
 	return
 }
 
+func (this *CamundaMock) GetCompleteRequests() (result map[string][]interface{}) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	return copyCamundaMockField(this.CompleteRequests)
+}
+
+func (this *CamundaMock) GetStopRequests() (result map[string][]interface{}) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	return copyCamundaMockField(this.StopRequests)
+}
+
+func (this *CamundaMock) GetUnexpectedRequests() (result map[string][]interface{}) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	return copyCamundaMockField(this.UnexpectedRequests)
+}
+
+func copyCamundaMockField(m map[string][]interface{}) (result map[string][]interface{}) {
+	result = map[string][]interface{}{}
+	for key, list := range m {
+		for _, e := range list {
+			result[key] = append(result[key], e)
+		}
+	}
+	return result
+}
+
 func (this *CamundaMock) Start(ctx context.Context) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		this.mux.Lock()
