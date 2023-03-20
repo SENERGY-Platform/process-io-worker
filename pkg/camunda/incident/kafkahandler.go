@@ -42,9 +42,11 @@ type KafkaIncidentHandler struct {
 
 func (this *KafkaIncidentHandler) Handle(incident model.Incident) error {
 	b, err := json.Marshal(model.KafkaIncidentsCommand{
-		Command:    "POST",
-		MsgVersion: 3,
-		Incident:   &incident,
+		Command:             "POST",
+		MsgVersion:          3,
+		Incident:            &incident,
+		ProcessDefinitionId: incident.ProcessDefinitionId,
+		ProcessInstanceId:   incident.ProcessInstanceId,
 	})
 	if err != nil {
 		log.Println("ERROR:", err)

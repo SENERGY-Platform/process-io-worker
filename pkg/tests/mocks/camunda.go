@@ -81,6 +81,7 @@ func (this *CamundaMock) Start(ctx context.Context) {
 		this.mux.Lock()
 		defer this.mux.Unlock()
 		path := request.URL.Path
+		query := request.URL.Query().Encode()
 		var msg interface{}
 		json.NewDecoder(request.Body).Decode(&msg)
 		// DELETE /engine-rest/process-instance/"+url.PathEscape(id)+"?skipIoMappings=true
@@ -88,7 +89,11 @@ func (this *CamundaMock) Start(ctx context.Context) {
 		// POST /engine-rest/external-task/fetchAndLock
 		if strings.HasPrefix(path, "/engine-rest/process-instance") {
 			if request.Method == "DELETE" {
-				this.StopRequests[path] = append(this.StopRequests[path], msg)
+				if query == "" {
+					this.StopRequests[path] = append(this.StopRequests[path], msg)
+				} else {
+					this.StopRequests[path+"?"+query] = append(this.StopRequests[path+"?"+query], msg)
+				}
 				json.NewEncoder(writer).Encode(nil)
 			} else {
 				this.UnexpectedRequests[path] = append(this.UnexpectedRequests[path], msg)
@@ -111,6 +116,12 @@ func (this *CamundaMock) Start(ctx context.Context) {
 			}
 			return
 		}
+		if request.Method == "GET" && strings.HasPrefix(path, "/engine-rest/process-definition/") {
+			definitionId := strings.TrimPrefix(path, "/engine-rest/process-definition/")
+			json.NewEncoder(writer).Encode(map[string]interface{}{"name": "name_of_" + definitionId})
+			return
+		}
+
 		if strings.HasPrefix(path, "/engine-rest/external-task") {
 			if request.Method == "POST" {
 				this.CompleteRequests[path] = append(this.CompleteRequests[path], msg)

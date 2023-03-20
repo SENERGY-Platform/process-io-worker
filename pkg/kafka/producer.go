@@ -18,6 +18,8 @@ package kafka
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
 	"github.com/segmentio/kafka-go"
 	"log"
@@ -46,6 +48,10 @@ func NewProducer(ctx context.Context, config configuration.Config, topic string)
 	var logger kafka.Logger
 	if config.Debug {
 		logger = log.New(os.Stdout, "KAFKA", 0)
+	}
+
+	if len(broker) == 0 {
+		return nil, errors.New(fmt.Sprint("unexpected broker count", broker, config.KafkaUrl))
 	}
 
 	result.writer = &kafka.Writer{
