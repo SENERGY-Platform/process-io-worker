@@ -35,7 +35,7 @@ func getList(client ioclient.IoClient, c *cache.CacheImpl, userId string) ([]mod
 	list := []model.VariableWithUnixTimestamp{}
 	err = c.Use("list", func() (interface{}, error) {
 		return client.List(userId, model.VariablesQueryOptions{Limit: int(count.Count), Offset: 0})
-	}, &count)
+	}, &list)
 	if err != nil {
 		log.Println("ERROR: unable to list io-variables", err)
 		return nil, err

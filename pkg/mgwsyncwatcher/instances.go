@@ -24,6 +24,7 @@ import (
 	"log"
 )
 
+// handleKnownInstancesUpdate watches mgw process sync messages to delete process-io-variables of removed process-instances
 func handleKnownInstancesUpdate(message paho.Message, client ioclient.IoClient, c *cache.CacheImpl, userId string) {
 	ids := []string{}
 	err := json.Unmarshal(message.Payload(), &ids)
