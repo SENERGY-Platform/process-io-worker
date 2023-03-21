@@ -31,7 +31,7 @@
     "//------incident_handler == mgw------------": "",
     "mgw_mqtt_broker": "",
 
-    "//------set to true if in mgw to ensure deletes of unused variables------------": "",
+    "//------set to true if in mgw, to ensure deletes of unused variables------------": "",
     "watch_mgw_process_sync": false,
     "mgw_process_user": "senergy",
 

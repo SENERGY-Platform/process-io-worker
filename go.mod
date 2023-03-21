@@ -10,6 +10,7 @@ require (
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/segmentio/kafka-go v0.4.34
+	github.com/wvanbergen/kazoo-go v0.0.0-20180202103751-f72d8611297a
 	go.mongodb.org/mongo-driver v1.10.2
 )
 
@@ -46,6 +47,7 @@ require (
 	github.com/opencontainers/runc v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
 	github.com/swaggo/http-swagger v1.3.3 // indirect

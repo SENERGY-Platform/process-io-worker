@@ -21,11 +21,12 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/segmentio/kafka-go"
+	"github.com/wvanbergen/kazoo-go"
 	"log"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
-	"time"
 )
 
 func Kafka(ctx context.Context, wg *sync.WaitGroup, zookeeperUrl string) (kafkaUrl string, err error) {
@@ -109,8 +110,19 @@ func Zookeeper(ctx context.Context, wg *sync.WaitGroup) (hostPort string, ipAddr
 	hostPort = strconv.Itoa(zkport)
 	err = pool.Retry(func() error {
 		log.Println("try zk connection...")
-		log.Println("no health check implemented: wait for 10s")
-		time.Sleep(10 * time.Second)
+		zookeeper := kazoo.NewConfig()
+		zk, chroot := kazoo.ParseConnectionString(zkContainer.Container.NetworkSettings.IPAddress)
+		zookeeper.Chroot = chroot
+		kz, err := kazoo.NewKazoo(zk, zookeeper)
+		if err != nil {
+			log.Println("kazoo", err)
+			return err
+		}
+		_, err = kz.Brokers()
+		if err != nil && strings.TrimSpace(err.Error()) != strings.TrimSpace("zk: node does not exist") {
+			log.Println("brokers", err)
+			return err
+		}
 		return nil
 	})
 	return hostPort, zkContainer.Container.NetworkSettings.IPAddress, err
