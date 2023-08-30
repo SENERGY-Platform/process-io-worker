@@ -49,11 +49,6 @@ func Mongo(ctx context.Context, wg *sync.WaitGroup) (hostport string, containeri
 		log.Println("DEBUG: remove container mongo", c.Terminate(context.Background()))
 	}()
 
-	err = Dockerlog(ctx, c, "MONGODB")
-	if err != nil {
-		return "", "", err
-	}
-
 	containerip, err = c.ContainerIP(ctx)
 	if err != nil {
 		return "", "", err
