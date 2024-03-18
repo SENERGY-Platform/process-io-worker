@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/SENERGY-Platform/process-io-api/pkg/api/client/auth"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/ioclient"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
@@ -46,10 +45,6 @@ func NewWithDependencies(config configuration.Config, ioApi IoClient) *Handler {
 type Handler struct {
 	config configuration.Config
 	api    IoClient
-}
-
-type Auth interface {
-	ExchangeUserToken(userid string) (token auth.Token, err error)
 }
 
 type IoClient interface {

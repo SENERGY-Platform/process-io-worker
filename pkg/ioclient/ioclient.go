@@ -26,6 +26,8 @@ import (
 	"github.com/SENERGY-Platform/process-io-api/pkg/database"
 	"github.com/SENERGY-Platform/process-io-api/pkg/model"
 	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
+	"github.com/SENERGY-Platform/service-commons/pkg/cache"
+	"github.com/SENERGY-Platform/service-commons/pkg/cache/localcache"
 	"sync"
 	"time"
 )
@@ -41,7 +43,14 @@ type IoClient interface {
 func New(ctx context.Context, wg *sync.WaitGroup, config configuration.Config) (IoClient, error) {
 	switch config.IoDataSource {
 	case configuration.ApiClient:
-		a := auth.New(config.AuthEndpoint, config.AuthClientId, config.AuthClientSecret, auth.NewCache(time.Duration(config.TokenCacheDefaultExpirationInSeconds)*time.Second))
+		c, err := cache.New(cache.Config{L1Provider: localcache.NewProvider(time.Duration(config.TokenCacheDefaultExpirationInSeconds)*time.Second, time.Second)})
+		if err != nil {
+			return nil, err
+		}
+		a, err := auth.New(config.AuthEndpoint, config.AuthClientId, config.AuthClientSecret, c)
+		if err != nil {
+			return nil, err
+		}
 		return client.NewWithAuth(config.IoApiUrl, a, config.Debug), nil
 	case configuration.MongoDb:
 		fallthrough
