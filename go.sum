@@ -12,10 +12,10 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/Microsoft/hcsshim v0.12.4 h1:Ev7YUMHAHoWNm+aDSPzc5W9s6E2jyL1szpVDJeZ/Rr4=
 github.com/Microsoft/hcsshim v0.12.4/go.mod h1:Iyl1WVpZzr+UkzjekHZbV8o5Z9ZkxNGx6CtY2Qg/JVQ=
-github.com/SENERGY-Platform/process-io-api v0.0.8 h1:TkiJGnWFpmQ8iMicnSvsWZiziLIdnggJU10jpgrc4R0=
-github.com/SENERGY-Platform/process-io-api v0.0.8/go.mod h1:pbVuGZ8Ox4i7bv129VC4e1XQVW8FFJoV7ePjwhsZvDo=
-github.com/SENERGY-Platform/service-commons v0.0.0-20240423132428-8eccbc027e71 h1:Z3Vj9ImRERXQE5fprE/KGkAsS/dgX0dMesM/cDSN9Tw=
-github.com/SENERGY-Platform/service-commons v0.0.0-20240423132428-8eccbc027e71/go.mod h1:1p2CQPNtler5leXqNgaOfr7DlgZUydrQlQYA97ycm4k=
+github.com/SENERGY-Platform/process-io-api v0.0.9 h1:+6baYWWXyDy/BJxF14UZS/wdi2e66WBBucTIrD85YdI=
+github.com/SENERGY-Platform/process-io-api v0.0.9/go.mod h1:8gp/0heE4lR8qAiq3uv+P3V1vAWLzMi/4TYIUjSktmI=
+github.com/SENERGY-Platform/service-commons v0.0.0-20240708085423-94423a495d7f h1:5DpZzncRU3bV9pd/0NgysOLGcGWpKH1AKNLCsFYdw4c=
+github.com/SENERGY-Platform/service-commons v0.0.0-20240708085423-94423a495d7f/go.mod h1:1p2CQPNtler5leXqNgaOfr7DlgZUydrQlQYA97ycm4k=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 h1:N7oVaKyGp8bttX0bfZGmcGkjz7DLQXhAn3DNd3T0ous=
