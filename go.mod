@@ -3,8 +3,8 @@ module github.com/SENERGY-Platform/process-io-worker
 go 1.22
 
 require (
-	github.com/SENERGY-Platform/process-io-api v0.0.9
-	github.com/SENERGY-Platform/service-commons v0.0.0-20240708085423-94423a495d7f
+	github.com/SENERGY-Platform/process-io-api v0.0.11
+	github.com/SENERGY-Platform/service-commons v0.0.0-20240813072046-91b3195dd8fc
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
