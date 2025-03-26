@@ -29,6 +29,8 @@ import (
 	"github.com/segmentio/kafka-go"
 	"io"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"reflect"
 	"sync"
@@ -272,6 +274,62 @@ func TestWorkerMgwIncident(t *testing.T) {
 	}
 	if !reflect.DeepEqual(mqttIncidentMessages, expectedMqttMessages) {
 		t.Errorf("\n%#v\n%#v", expectedMqttMessages, mqttIncidentMessages)
+	}
+}
+
+func TestWorkerHttpIncident(t *testing.T) {
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	config, err := configuration.Load("../../config.json")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	config.IncidentHandler = configuration.HttpIncidentHandler
+
+	incidentMessages := []model.Incident{}
+	incidentsApiMockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var incident model.Incident
+		err = json.NewDecoder(r.Body).Decode(&incident)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		incident.Id = ""
+		incident.Time = time.Time{}
+		incidentMessages = append(incidentMessages, incident)
+	}))
+	defer incidentsApiMockServer.Close()
+	config.IncidentApiUrl = incidentsApiMockServer.URL
+
+	camundamock, err := incidentEnv(ctx, wg, config)
+	if err != nil {
+		t.Error(err)
+		t.Logf("%#v\n", config)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	if len(camundamock.GetUnexpectedRequests()) > 0 {
+		t.Error(camundamock.GetUnexpectedRequests())
+		return
+	}
+	if len(camundamock.GetCompleteRequests()) > 0 {
+		t.Error(camundamock.GetCompleteRequests())
+		return
+	}
+
+	expectedMqttMessages := []model.Incident{
+		{Id: "", MsgVersion: 0, ExternalTaskId: "task1", ProcessInstanceId: "instance1", ProcessDefinitionId: "definition1", WorkerId: "process_io", ErrorMessage: "mock error", Time: time.Time{}, TenantId: "user1"},
+		{Id: "", MsgVersion: 0, ExternalTaskId: "task2", ProcessInstanceId: "instance2", ProcessDefinitionId: "definition2", WorkerId: "process_io", ErrorMessage: "mock error", Time: time.Time{}, TenantId: "user1"},
+	}
+	if !reflect.DeepEqual(incidentMessages, expectedMqttMessages) {
+		t.Errorf("\n%#v\n%#v", expectedMqttMessages, incidentMessages)
 	}
 }
 

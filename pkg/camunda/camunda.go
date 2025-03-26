@@ -70,6 +70,8 @@ func StartDefault(ctx context.Context, wg *sync.WaitGroup, config configuration.
 			}
 		case configuration.CamundaIncidentHandler:
 			incidentHandler = incident.NewCamundaIncidentHandler(c)
+		case configuration.HttpIncidentHandler:
+			incidentHandler = incident.NewHttpIncidentHandler(config)
 		default:
 			return nil, errors.New("unknown incident handler: " + config.IncidentHandler)
 		}

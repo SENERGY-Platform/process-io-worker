@@ -60,6 +60,8 @@ type Config struct {
 	WatchMgwProcessSync bool   `json:"watch_mgw_process_sync"`
 	MgwProcessUser      string `json:"mgw_process_user"`
 
+	IncidentApiUrl string `json:"incident_api_url"`
+
 	Debug bool `json:"debug"`
 
 	ReadPrefix                     string `json:"read_prefix"`
@@ -80,6 +82,7 @@ type IncidentHandler = string
 const KafkaIncidentHandler IncidentHandler = "kafka"
 const CamundaIncidentHandler IncidentHandler = "camunda"
 const MgwIncidentHandler IncidentHandler = "mgw"
+const HttpIncidentHandler IncidentHandler = "http"
 
 func Load(location string) (config Config, err error) {
 	return LoadConfig[Config](location)
