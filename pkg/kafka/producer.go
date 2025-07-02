@@ -39,10 +39,12 @@ func NewProducer(ctx context.Context, config configuration.Config, topic string)
 		log.Println("ERROR: unable to get broker list", err)
 		return nil, err
 	}
-	err = InitTopic(config.KafkaUrl, topic)
-	if err != nil {
-		log.Println("ERROR: unable to create topic", err)
-		return nil, err
+	if config.InitTopics {
+		err = InitTopic(config.KafkaUrl, topic)
+		if err != nil {
+			log.Println("ERROR: unable to create topic", err)
+			return nil, err
+		}
 	}
 
 	var logger kafka.Logger

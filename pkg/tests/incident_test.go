@@ -51,6 +51,7 @@ func TestWorkerKafkaIncident(t *testing.T) {
 		return
 	}
 	config.IncidentHandler = configuration.KafkaIncidentHandler
+	config.InitTopics = true
 
 	_, zkIp, err := docker.Zookeeper(ctx, wg)
 	if err != nil {

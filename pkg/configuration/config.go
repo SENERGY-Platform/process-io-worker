@@ -69,6 +69,8 @@ type Config struct {
 	DefaultPrefix                  string `json:"default_prefix"`
 	InstanceIdPlaceholder          string `json:"instance_id_placeholder"`
 	ProcessDefinitionIdPlaceholder string `json:"process_definition_id_placeholder"`
+
+	InitTopics bool `json:"init_topics"`
 }
 
 type IoDataSource = string
