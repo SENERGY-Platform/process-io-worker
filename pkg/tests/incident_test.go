@@ -20,13 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/camunda"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/tests/docker"
-	"github.com/SENERGY-Platform/process-io-worker/pkg/tests/mocks"
-	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/segmentio/kafka-go"
 	"io"
 	"log"
 	"net/http"
@@ -36,6 +29,15 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/SENERGY-Platform/process-io-worker/pkg/camunda"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/configuration"
+	kafka2 "github.com/SENERGY-Platform/process-io-worker/pkg/kafka"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/model"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/tests/docker"
+	"github.com/SENERGY-Platform/process-io-worker/pkg/tests/mocks"
+	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/segmentio/kafka-go"
 )
 
 func TestWorkerKafkaIncident(t *testing.T) {
@@ -53,18 +55,19 @@ func TestWorkerKafkaIncident(t *testing.T) {
 	config.IncidentHandler = configuration.KafkaIncidentHandler
 	config.InitTopics = true
 
-	_, zkIp, err := docker.Zookeeper(ctx, wg)
+	config.KafkaUrl, err = docker.Kafka(ctx, wg)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	zkUrl := zkIp + ":2181"
 
-	config.KafkaUrl, err = docker.Kafka(ctx, wg, zkUrl)
+	err = kafka2.InitTopic(config.KafkaUrl, config.KafkaIncidentTopic)
 	if err != nil {
 		t.Error(err)
 		return
 	}
+
+	time.Sleep(2 * time.Second)
 
 	log.Println("start incidentEnv()")
 
